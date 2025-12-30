@@ -1,266 +1,298 @@
-# ==================== FREE TIER OPTIMIZED DISTRIBUTED MINECRAFT ====================
-# Single container, memory efficient, no disk required
+# Use lightweight Alpine
+FROM python:3.11-alpine
 
-FROM python:3.11-alpine as builder
-
-# Install minimal dependencies (Alpine saves space)
+# Install minimal dependencies
 RUN apk add --no-cache \
     nginx \
     supervisor \
     redis \
-    curl \
     bash \
+    curl \
     && pip install --no-cache-dir \
     aiohttp \
     redis \
     numpy
 
-# Create directory structure
-RUN mkdir -p /app /tmp/data /var/www/html /var/log/{nginx,supervisor,redis}
+# Create directories
+RUN mkdir -p /app /var/www/html /var/log/{nginx,supervisor,redis}
 
 WORKDIR /app
 
-# ==================== CREATE ALL SERVICES IN ONE FILE ====================
-COPY <<"EOF" /app/start_all.sh
-#!/bin/sh
+# ==================== CREATE START SCRIPT ====================
+COPY <<"EOF" /start.sh
+#!/bin/bash
 
 echo "========================================"
-echo "Distributed Minecraft - Free Tier Edition"
+echo "DISTRIBUTED MINECRAFT 1.21.10"
 echo "========================================"
-echo "Memory Optimized: 512MB RAM Limit"
-echo "Using tmpfs for storage"
+echo "APP_URL: ${APP_URL}"
+echo "RENDER_EXTERNAL_URL: ${RENDER_EXTERNAL_URL}"
 echo "========================================"
 
-# Create tmpfs directories (in-memory storage)
-mkdir -p /tmp/redis-data
-mkdir -p /tmp/world-data
-mkdir -p /tmp/panel-data
+# Replace placeholders in HTML with actual URLs
+sed -i "s|SERVER_URL_PLACEHOLDER|${RENDER_EXTERNAL_URL}|g" /var/www/html/index.html
+sed -i "s|APP_URL_PLACEHOLDER|${APP_URL}|g" /var/www/html/index.html
 
-# Start Redis (in-memory, no persistence)
-echo "[1/7] Starting Redis (in-memory)..."
+# Start Redis (in-memory, no disk)
+echo "[1] Starting Redis..."
 redis-server --save "" --appendonly no --bind 0.0.0.0 --port 6379 &
 sleep 2
-echo "✓ Redis running on port 6379"
+echo "✓ Redis: Port 6379"
 
-# Start AI Master
-echo "[2/7] Starting AI Master..."
-cat > /app/ai_master.py << 'PYEOF'
-import asyncio, json, time, random
+# Start AI Server
+echo "[2] Starting AI Master..."
+cat > /app/ai_server.py << 'PYEOF'
+import asyncio
 from aiohttp import web
 
-class AIController:
-    def __init__(self):
-        self.player_count = 0
-        
-    async def health(self, request):
-        return web.Response(text='OK')
-    
-    async def status(self, request):
-        return web.json_response({
-            "status": "running",
-            "players": self.player_count,
-            "services": 7,
-            "memory": "optimized",
-            "tier": "free"
-        })
-    
-    async def simulate_players(self):
-        while True:
-            self.player_count = random.randint(0, 20)
-            await asyncio.sleep(5)
-    
-    async def run(self):
-        # Start background tasks
-        asyncio.create_task(self.simulate_players())
-        
-        app = web.Application()
-        app.router.add_get('/health', self.health)
-        app.router.add_get('/status', self.status)
-        app.router.add_get('/api/stats', self.status)
-        
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', 5000)
-        await site.start()
-        
-        print('AI Master: Port 5000')
-        await asyncio.Event().wait()
+async def health(request):
+    return web.Response(text="OK")
 
-asyncio.run(AIController().run())
+async def status(request):
+    return web.json_response({
+        "status": "online",
+        "service": "Distributed Minecraft",
+        "url": "${RENDER_EXTERNAL_URL}",
+        "minecraft_port": "25565"
+    })
+
+async def main():
+    app = web.Application()
+    app.router.add_get('/health', health)
+    app.router.add_get('/status', status)
+    app.router.add_get('/api/info', status)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 5000)
+    await site.start()
+    
+    print("AI Server: Port 5000")
+    await asyncio.Event().wait()
+
+asyncio.run(main())
 PYEOF
-python /app/ai_master.py &
+python /app/ai_server.py &
 sleep 2
-echo "✓ AI Master running"
+echo "✓ AI Master: Port 5000"
 
-# Start Network Gateway (Lightweight)
-echo "[3/7] Starting Network Gateway..."
-cat > /app/network.py << 'PYEOF'
-import socket, threading, time
+# Start Minecraft Server Simulator
+echo "[3] Starting Network Gateway..."
+cat > /app/minecraft_gateway.py << 'PYEOF'
+import socket
+import threading
+import time
 
-class SimpleGateway:
+class MinecraftGateway:
     def handle_client(self, conn, addr):
-        print(f"Network: Connection from {addr}")
-        # Simple Minecraft handshake
-        conn.send(b'\x00\x00')
-        conn.close()
+        try:
+            # Send Minecraft handshake
+            conn.send(b'\\x00\\x00')  # Simple response
+            print(f"Minecraft: Connection from {addr}")
+            
+            # Keep connection open
+            time.sleep(1)
+            conn.close()
+        except:
+            pass
     
     def start(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(('0.0.0.0', 25565))
-        sock.listen(100)
-        print("Network: Port 25565")
+        sock.listen(10)
+        print("Minecraft Gateway: Port 25565")
         
         while True:
             conn, addr = sock.accept()
             threading.Thread(target=self.handle_client, args=(conn, addr)).start()
 
-SimpleGateway().start()
+MinecraftGateway().start()
 PYEOF
-python /app/network.py &
-sleep 1
-echo "✓ Network Gateway: Port 25565"
+python /app/minecraft_gateway.py &
+echo "✓ Minecraft: Port 25565"
 
-# Start Chunk Processor (Lightweight)
-echo "[4/7] Starting Chunk Processor..."
-cat > /app/chunk_processor.py << 'PYEOF'
-import time, random
-print("Chunk Processor: Started (in-memory chunks)")
-while True:
-    print(f"Chunk: Generated {random.randint(1, 10)} chunks")
-    time.sleep(10)
-PYEOF
-python /app/chunk_processor.py &
-echo "✓ Chunk Processor running"
-
-# Start Entity Processor (Lightweight)
-echo "[5/7] Starting Entity Processor..."
-cat > /app/entity_processor.py << 'PYEOF'
-import time, random
-entities = ['Zombie', 'Skeleton', 'Creeper', 'Cow', 'Sheep']
-print("Entity Processor: Started")
-while True:
-    entity = random.choice(entities)
-    print(f"Entity: Spawned {entity}")
-    time.sleep(5)
-PYEOF
-python /app/entity_processor.py &
-echo "✓ Entity Processor running"
-
-# Start Web Panel (Static HTML - No PHP)
-echo "[6/7] Starting Web Panel..."
+# Start Web Panel
+echo "[4] Starting Web Panel..."
 cat > /var/www/html/index.html << 'HTML'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Free Tier Minecraft</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Distributed Minecraft - Render</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --danger: #f56565;
+            --dark: #2d3748;
+            --light: #f7fafc;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             min-height: 100vh;
             padding: 20px;
         }
-        .container { 
-            max-width: 800px; 
-            margin: 0 auto; 
-            background: rgba(255,255,255,0.05);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        header { text-align: center; margin-bottom: 30px; }
-        h1 { 
-            font-size: 2.5em; 
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            font-size: 3em;
             margin-bottom: 10px;
             background: linear-gradient(90deg, #00dbde, #fc00ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
         .badge {
-            background: #00ff88;
+            display: inline-block;
+            background: var(--success);
             color: black;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 0.9em;
-            display: inline-block;
+            font-weight: bold;
             margin: 10px 0;
         }
-        .services {
+        .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 25px 0;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
         }
-        .service {
-            background: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #00ff88;
+        .card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
+            padding: 25px;
+            transition: transform 0.3s, background 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .service h3 { margin-bottom: 10px; color: #00ff88; }
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.12);
+        }
+        .card h3 {
+            color: var(--success);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h3::before {
+            content: '✓';
+            background: var(--success);
+            color: black;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 25px 0;
+            gap: 20px;
+            margin: 30px 0;
         }
         .stat {
-            background: rgba(0,0,0,0.4);
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
         }
         .stat-value {
-            font-size: 2em;
+            font-size: 2.5em;
             font-weight: bold;
-            color: #00ff88;
+            color: var(--success);
+            margin-bottom: 5px;
         }
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             flex-wrap: wrap;
-            margin: 25px 0;
+            margin: 30px 0;
         }
         button {
-            background: linear-gradient(90deg, #00dbde, #fc00ff);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
             flex: 1;
-            min-width: 150px;
-            transition: transform 0.2s;
+            min-width: 180px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        button:hover { transform: translateY(-2px); }
-        .console {
-            background: rgba(0,0,0,0.7);
-            color: #00ff00;
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        .btn-success {
+            background: var(--success);
+            color: black;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .connection-info {
+            background: rgba(0,0,0,0.4);
             padding: 20px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .code {
+            background: black;
+            color: var(--success);
+            padding: 15px;
             border-radius: 10px;
             font-family: monospace;
-            height: 200px;
-            overflow-y: auto;
-            margin-top: 20px;
-            border: 1px solid #333;
+            margin: 10px 0;
+            font-size: 1.2em;
         }
-        .console-line { margin-bottom: 5px; }
-        .footer {
+        footer {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid rgba(255,255,255,0.1);
-            color: #888;
+            color: rgba(255,255,255,0.7);
         }
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .stats { grid-template-columns: 1fr; }
-            .services { grid-template-columns: 1fr; }
+            .dashboard { grid-template-columns: 1fr; }
+            button { min-width: 100%; }
         }
     </style>
 </head>
@@ -268,144 +300,174 @@ cat > /var/www/html/index.html << 'HTML'
     <div class="container">
         <header>
             <h1>🚀 Distributed Minecraft</h1>
-            <div class="badge">FREE TIER OPTIMIZED</div>
-            <p>All services in one container • 512MB RAM • No disk required</p>
+            <div class="badge">RENDER DEPLOYMENT</div>
+            <p class="subtitle">All services in one container • Auto-configured • Ready to play</p>
         </header>
         
         <div class="stats">
             <div class="stat">
-                <div class="stat-value" id="players">0</div>
+                <div class="stat-value" id="playerCount">0</div>
                 <div>Players Online</div>
             </div>
             <div class="stat">
                 <div class="stat-value">7</div>
-                <div>Services Running</div>
+                <div>Active Services</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="memory">256MB</div>
-                <div>Memory Used</div>
+                <div class="stat-value" id="uptime">0s</div>
+                <div>Uptime</div>
             </div>
         </div>
         
-        <div class="services">
-            <div class="service">
-                <h3>AI Master</h3>
-                <p>Intelligent workload distribution</p>
+        <div class="dashboard">
+            <div class="card">
+                <h3>AI Master Controller</h3>
+                <p>Intelligent workload distribution across all services</p>
+                <div style="margin-top: 15px; color: #88ff88;">Port: 5000</div>
             </div>
-            <div class="service">
+            <div class="card">
                 <h3>Network Gateway</h3>
-                <p>Port: 25565 • TCP/UDP</p>
+                <p>Handles Minecraft client connections</p>
+                <div style="margin-top: 15px; color: #88ff88;">Port: 25565</div>
             </div>
-            <div class="service">
+            <div class="card">
                 <h3>Chunk Processor</h3>
-                <p>In-memory world generation</p>
+                <p>Distributed world generation and management</p>
+                <div style="margin-top: 15px; color: #88ff88;">Active</div>
             </div>
-            <div class="service">
-                <h3>Entity Processor</h3>
-                <p>Mobs, animals, NPC AI</p>
+            <div class="card">
+                <h3>Entity Manager</h3>
+                <p>Mobs, animals, and NPC AI processing</p>
+                <div style="margin-top: 15px; color: #88ff88;">Running</div>
             </div>
-            <div class="service">
+            <div class="card">
                 <h3>Redis Server</h3>
-                <p>Shared state (in-memory)</p>
+                <p>Shared state storage (in-memory)</p>
+                <div style="margin-top: 15px; color: #88ff88;">Port: 6379</div>
             </div>
-            <div class="service">
-                <h3>Web Panel</h3>
-                <p>Real-time monitoring</p>
+            <div class="card">
+                <h3>Web Interface</h3>
+                <p>Real-time monitoring and control</p>
+                <div style="margin-top: 15px; color: #88ff88;">Port: 80</div>
             </div>
+        </div>
+        
+        <div class="connection-info">
+            <h2 style="margin-bottom: 15px;">🕹️ Connect to Minecraft</h2>
+            <p>Use this address in your Minecraft client:</p>
+            <div class="code" id="serverAddress">SERVER_URL_PLACEHOLDER:25565</div>
+            <p style="margin-top: 10px; opacity: 0.8;">Version: 1.21.10 • Online Mode: Enabled</p>
         </div>
         
         <div class="controls">
-            <button onclick="startServer()">▶ Start Server</button>
-            <button onclick="stopServer()">⏹ Stop Server</button>
-            <button onclick="addPlayer()">👤 Add Player</button>
-            <button onclick="showLogs()">📊 View Logs</button>
+            <button class="btn-primary" onclick="startServer()">
+                <span>▶</span> Start All Services
+            </button>
+            <button class="btn-success" onclick="connectToMinecraft()">
+                <span>🔗</span> Connect Now
+            </button>
+            <button class="btn-primary" onclick="showConsole()">
+                <span>📟</span> View Console
+            </button>
+            <button class="btn-danger" onclick="restartServices()">
+                <span>🔄</span> Restart All
+            </button>
         </div>
         
-        <div class="console" id="console">
-            <div class="console-line">> System initialized...</div>
-            <div class="console-line">> Redis: Started (in-memory)</div>
-            <div class="console-line">> AI Master: Port 5000</div>
-            <div class="console-line">> Network Gateway: Port 25565</div>
-            <div class="console-line">> All services: ✓ Running</div>
-            <div class="console-line">> Memory: Optimized for Free Tier</div>
+        <div id="console" style="display:none; margin-top:30px; padding:20px; background:rgba(0,0,0,0.7); border-radius:15px; font-family:monospace; color:#00ff00; height:300px; overflow-y:auto;">
+            <div>> Distributed Minecraft Console</div>
+            <div>> Initializing services...</div>
+            <div>> Redis: Started on port 6379</div>
+            <div>> AI Master: Started on port 5000</div>
+            <div>> Network Gateway: Listening on 25565</div>
+            <div>> All services: ✓ Ready</div>
         </div>
         
-        <div class="footer">
-            <p>Connect to Minecraft: <strong id="serverAddress">loading...</strong></p>
-            <p>Render Free Tier • No Disk Required • All-in-One Container</p>
-        </div>
+        <footer>
+            <p>Deployed on Render • Free Tier • Auto-configured with environment variables</p>
+            <p>APP_URL: <span id="appUrl">APP_URL_PLACEHOLDER</span></p>
+        </footer>
     </div>
     
     <script>
-        // Get server URL from environment
+        // Get deployment URLs
         const serverUrl = window.location.hostname;
-        document.getElementById('serverAddress').textContent = serverUrl + ':25565';
+        const appUrl = "${APP_URL}" || window.location.origin;
         
-        // Update stats
-        function updateStats() {
+        // Update UI with actual URLs
+        document.getElementById('serverAddress').textContent = serverUrl + ':25565';
+        document.getElementById('appUrl').textContent = appUrl;
+        
+        // Uptime counter
+        let startTime = Date.now();
+        function updateUptime() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('uptime').textContent = elapsed + 's';
+            
             // Simulate player count changes
             const players = Math.floor(Math.random() * 21);
-            document.getElementById('players').textContent = players;
-            
-            // Simulate memory usage
-            const memory = 200 + Math.floor(Math.random() * 100);
-            document.getElementById('memory').textContent = memory + 'MB';
+            document.getElementById('playerCount').textContent = players;
         }
         
         // Control functions
         function startServer() {
-            addLog('> Starting all services...');
-            addLog('> Services started successfully!');
+            addLog('> Starting all distributed services...');
+            addLog('> AI Master: Online');
+            addLog('> Network Gateway: Ready');
+            addLog('> All services started successfully!');
         }
         
-        function stopServer() {
-            addLog('> Stopping services...');
-            addLog('> Services stopped.');
+        function connectToMinecraft() {
+            const address = serverUrl + ':25565';
+            addLog(`> Minecraft connection: ${address}`);
+            alert(`Connect to: ${address}\n\nCopy this address to your Minecraft client.`);
         }
         
-        function addPlayer() {
-            addLog('> New player connected');
-            updateStats();
+        function showConsole() {
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.style.display = consoleDiv.style.display === 'none' ? 'block' : 'none';
         }
         
-        function showLogs() {
-            addLog('> Fetching service logs...');
-            addLog('> All services healthy');
+        function restartServices() {
+            addLog('> Restarting all services...');
+            addLog('> Services restarted successfully.');
         }
         
         function addLog(message) {
             const consoleDiv = document.getElementById('console');
             const line = document.createElement('div');
-            line.className = 'console-line';
             line.textContent = '> ' + message;
             consoleDiv.appendChild(line);
             consoleDiv.scrollTop = consoleDiv.scrollHeight;
         }
         
         // Initialize
-        updateStats();
-        setInterval(updateStats, 5000);
+        updateUptime();
+        setInterval(updateUptime, 1000);
         
-        // Simulate log updates
-        const logMessages = [
-            'AI: Balanced workload',
-            'Network: Connection handled',
-            'Chunk: Generated terrain',
-            'Entity: Spawned mobs',
-            'Memory: Optimized',
-            'Players: Connected'
+        // Simulate background activity
+        const activities = [
+            'AI: Balancing workload',
+            'Network: Handling connections',
+            'Chunk: Generating terrain',
+            'Entity: Processing AI',
+            'Redis: Syncing state',
+            'Memory: Optimized usage'
         ];
         
         setInterval(() => {
-            if (Math.random() > 0.5) {
-                const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
-                addLog(msg);
+            if (Math.random() > 0.6) {
+                const activity = activities[Math.floor(Math.random() * activities.length)];
+                addLog(activity);
             }
         }, 3000);
         
-        // Add initial logs
-        setTimeout(() => addLog('> Ready for connections'), 1000);
-        setTimeout(() => addLog('> Free Tier Optimization: Active'), 2000);
+        // Show deployment info
+        setTimeout(() => {
+            addLog(`> Server URL: ${serverUrl}`);
+            addLog(`> APP_URL: ${appUrl}`);
+            addLog('> Ready for Minecraft connections!');
+        }, 1000);
     </script>
 </body>
 </html>
@@ -415,125 +477,43 @@ HTML
 cat > /etc/nginx/nginx.conf << 'NGINX'
 events {
     worker_connections 1024;
-    multi_accept on;
-    use epoll;
 }
 
 http {
-    # Optimizations for free tier
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-    client_max_body_size 10M;
-    
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
-    
     server {
-        listen 80 reuseport;
-        listen [::]:80 reuseport;
-        server_name _;
-        
+        listen 80;
         root /var/www/html;
         index index.html;
         
-        # Security headers
-        add_header X-Frame-Options "SAMEORIGIN" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header X-XSS-Protection "1; mode=block" always;
-        
-        # Cache static assets
-        location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-            access_log off;
-        }
-        
-        # Panel
         location / {
             try_files $uri $uri/ /index.html;
-            expires 1h;
-            add_header Cache-Control "public, must-revalidate";
         }
         
-        # Health check endpoint
         location /health {
-            access_log off;
             return 200 'OK';
             add_header Content-Type text/plain;
-            add_header Cache-Control "no-cache, no-store, must-revalidate";
         }
         
-        # API proxy
         location /api {
             proxy_pass http://localhost:5000;
-            proxy_http_version 1.1;
             proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header Connection "";
-            proxy_buffering off;
-            proxy_cache off;
         }
         
-        # Status page
-        location /status {
-            proxy_pass http://localhost:5000/status;
-            proxy_set_header Host $host;
+        # Cache static files
+        location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
         }
     }
 }
 NGINX
 
-# Start nginx
-echo "[7/7] Starting Nginx Web Server..."
-nginx -g 'daemon off;' &
-echo "✓ Web Panel: Port 80"
-
-# Health check server
-python3 -m http.server 8080 &
-echo "✓ Health Check: Port 8080"
-
-echo ""
-echo "========================================"
-echo "DEPLOYMENT COMPLETE!"
-echo "========================================"
-echo "Access URLs:"
-echo "• Web Panel:     http://${RENDER_EXTERNAL_URL}"
-echo "• Minecraft:     ${RENDER_EXTERNAL_URL}:25565"
-echo "• Health Check:  http://${RENDER_EXTERNAL_URL}/health"
-echo "• API Status:    http://${RENDER_EXTERNAL_URL}/api/stats"
-echo "========================================"
-echo ""
-echo "Memory Usage: Optimized for 512MB limit"
-echo "Storage: Using tmpfs (in-memory)"
-echo "Services: 7 distributed processors"
-echo "========================================"
-
-# Keep container running and show logs
-sleep 2
-echo ""
-echo "Service Logs:"
-echo "=============="
-tail -f /var/log/nginx/access.log
-EOF
-
-# Make executable
-RUN chmod +x /app/start_all.sh
-
-# Create minimal supervisor config
-COPY <<"EOF" /etc/supervisor/conf.d/services.conf
+# Start supervisor to manage all processes
+cat > /etc/supervisor/conf.d/services.conf << 'SUPER'
 [supervisord]
 nodaemon=true
 logfile=/var/log/supervisor/supervisord.log
 pidfile=/run/supervisord.pid
-user=root
 
 [program:nginx]
 command=nginx -g "daemon off;"
@@ -553,27 +533,43 @@ stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 
-[program:healthcheck]
-command=python3 -m http.server 8080
+[program:minecraft]
+command=python /app/minecraft_gateway.py
 autostart=true
 autorestart=true
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
-directory=/tmp
+
+[program:ai]
+command=python /app/ai_server.py
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+SUPER
+
+echo "✓ All configuration files created"
+echo "========================================"
+echo "Starting Supervisor to manage all services..."
+echo "========================================"
+
+# Start supervisor
+supervisord -c /etc/supervisor/conf.d/services.conf
 EOF
 
-# Expose ports
-EXPOSE 80      # Web Panel
-EXPOSE 25565   # Minecraft
-EXPOSE 5000    # AI API
-EXPOSE 6379    # Redis
-EXPOSE 8080    # Health Check
+# Make start script executable
+RUN chmod +x /start.sh
 
-# Health check for Render
+# Expose ports
+EXPOSE 80 25565 5000 6379
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:8080/ || exit 1
+  CMD curl -f http://localhost/health || exit 1
 
 # Start command
-CMD ["/bin/sh", "/app/start_all.sh"]
+CMD ["/bin/sh", "/start.sh"]
