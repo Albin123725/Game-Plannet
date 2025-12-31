@@ -68,7 +68,8 @@ create_vps() {
     echo ""
     
     # Get VPS details
-    read -p "$(echo -e ${GREEN}Enter VPS hostname: ${NC})" vps_name
+    echo -e "${GREEN}Enter VPS hostname: ${NC}"
+    read vps_name
     vps_name=${vps_name:-albin-server}
     
     # Generate password
@@ -409,13 +410,15 @@ CONFIG
     echo "  Reboot:       $vps_dir/control.sh restart $password"
     echo ""
     
-    read -p "$(echo -e ${YELLOW}Start VPS now? (Y/n): ${NC})" choice
+    echo -e "${YELLOW}Start VPS now? (Y/n): ${NC}"
+    read choice
     if [[ ! "$choice" =~ ^[Nn]$ ]]; then
         echo ""
         "$vps_dir/control.sh" start "$password"
         sleep 2
         echo ""
-        read -p "$(echo -e ${YELLOW}Connect to VPS now? (Y/n): ${NC})" connect
+        echo -e "${YELLOW}Connect to VPS now? (Y/n): ${NC}"
+        read connect
         if [[ ! "$connect" =~ ^[Nn]$ ]]; then
             "$vps_dir/control.sh" shell "$password"
         fi
@@ -506,7 +509,8 @@ delete_vps() {
     fi
     
     echo -e "${RED}⚠️  WARNING: This will permanently delete VPS '$1'${NC}"
-    read -p "Are you sure? (type 'DELETE' to confirm): " confirm
+    echo -e "${YELLOW}Are you sure? (type 'DELETE' to confirm): ${NC}"
+    read confirm
     if [ "$confirm" = "DELETE" ]; then
         "$vps_dir/control.sh" stop 2>/dev/null
         rm -rf "$vps_dir"
@@ -585,7 +589,8 @@ create_minecraft_vps() {
     vps_dir="$VPS_HOME/instances/$vps_name"
     
     if [ -d "$vps_dir" ]; then
-        read -p "$(echo -e ${YELLOW}Minecraft VPS already exists. Overwrite? (y/N): ${NC})" overwrite
+        echo -e "${YELLOW}Minecraft VPS already exists. Overwrite? (y/N): ${NC}"
+        read overwrite
         if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
             return
         fi
@@ -714,7 +719,8 @@ MC_CONTROL
     echo "reboot      - Reboot VPS"
     echo ""
     
-    read -p "$(echo -e ${YELLOW}Start Minecraft VPS now? (Y/n): ${NC})" choice
+    echo -e "${YELLOW}Start Minecraft VPS now? (Y/n): ${NC}"
+    read choice
     if [[ ! "$choice" =~ ^[Nn]$ ]]; then
         "$vps_dir/boot.sh" "minecraft-server" "$password"
     fi
@@ -750,7 +756,8 @@ main_menu() {
         echo -e "${CYAN}Currently: $vps_count VPS instances${NC}"
         echo ""
         
-        read -p "$(echo -e ${YELLOW}Choose option [1-7]: ${NC})" choice
+        echo -e "${YELLOW}Choose option [1-7]: ${NC}"
+        read choice
         
         case $choice in
             1)
@@ -761,7 +768,8 @@ main_menu() {
                 ;;
             3)
                 echo ""
-                read -p "$(echo -e ${YELLOW}Enter VPS name: ${NC})" vps_name
+                echo -e "${YELLOW}Enter VPS name: ${NC}"
+                read vps_name
                 connect_vps "$vps_name"
                 ;;
             4)
@@ -769,7 +777,8 @@ main_menu() {
                 ;;
             5)
                 echo ""
-                read -p "$(echo -e ${YELLOW}Enter VPS name to delete: ${NC})" vps_name
+                echo -e "${YELLOW}Enter VPS name to delete: ${NC}"
+                read vps_name
                 delete_vps "$vps_name"
                 ;;
             6)
@@ -789,7 +798,8 @@ main_menu() {
         
         echo ""
         echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
-        read -p "$(echo -e ${CYAN}Press Enter to continue...${NC})" _
+        echo -e "${CYAN}Press Enter to continue...${NC}"
+        read _
     done
 }
 
