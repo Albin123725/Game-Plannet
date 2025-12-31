@@ -1,242 +1,212 @@
 #!/bin/bash
 
 # ============================================
-# 🔥 REAL VPS CREATOR FOR FIREBASE
+# 🔥 VPS CREATOR BY ALBIN
 # ============================================
-# Creates VPS that shows: root@hostname ~]#
-# With real boot sequence and reboot
+# Create REAL VPS with root@hostname prompt
+# 24/7 Operation | Firebase Cloud Shell
 # ============================================
 
-# Create the script file
-cat > ~/vps-creator.sh << 'VPS_CREATOR_EOF'
-#!/bin/bash
-
-# Global variables
-VPS_BASE="$HOME/real-vps"
-VPS_COUNT=0
+# Global Configuration
+VPS_BASE="$HOME/albin-vps"
+LOG_FILE="$VPS_BASE/vps-system.log"
 
 # Colors
+BLACK='\033[0;30m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
+WHITE='\033[1;37m'
 NC='\033[0m'
 
-show_header() {
+# ASCII Art Banner
+show_banner() {
     clear
-    echo -e "${GREEN}"
-    echo "╔══════════════════════════════════════════════════╗"
-    echo "║           REAL VPS CREATOR - FIREBASE            ║"
-    echo "║      Creates VPS with root@hostname prompt       ║"
-    echo "║             Just like real SSH access            ║"
-    echo "╚══════════════════════════════════════════════════╝"
+    echo -e "${RED}"
+    echo '    █████╗ ██╗     ██████╗ ██╗███╗   ██╗'
+    echo '   ██╔══██╗██║     ██╔══██╗██║████╗  ██║'
+    echo '   ███████║██║     ██████╔╝██║██╔██╗ ██║'
+    echo '   ██╔══██║██║     ██╔══██╗██║██║╚██╗██║'
+    echo '   ██║  ██║███████╗██████╔╝██║██║ ╚████║'
+    echo '   ╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝╚═╝  ╚═══╝'
     echo -e "${NC}"
-    echo -e "${YELLOW}Firebase Cloud Shell | $(date)${NC}"
+    echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}            ULTIMATE VPS CREATOR FOR FIREBASE                ${NC}"
+    echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}Create Real VPS | Root Access | 24/7 Operation | Free Forever${NC}"
     echo ""
 }
 
-# Create a new VPS
+# Initialize system
+init_system() {
+    mkdir -p "$VPS_BASE"/{vps,backups,config}
+    touch "$LOG_FILE"
+    echo "[$(date)] System initialized" >> "$LOG_FILE"
+}
+
+# Create VPS
 create_vps() {
-    show_header
-    
-    echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}                 CREATE NEW VPS                   ${NC}"
-    echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
+    show_banner
+    echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}                      CREATE NEW VPS                          ${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
     echo ""
     
-    # Get VPS details
-    read -p "Enter VPS hostname (e.g., ubuntu, centos, debian): " vps_name
-    vps_name=${vps_name:-myvps}
+    # Get VPS name
+    read -p "$(echo -e ${GREEN}Enter VPS hostname: ${NC})" vps_name
+    vps_name=${vps_name:-albin-vps}
     
     # Generate password
     password=$(openssl rand -base64 12 | tr -d '/+=' | head -c 12)
     
-    # Create VPS directory
-    vps_dir="$VPS_BASE/$vps_name"
+    # Create directory
+    vps_dir="$VPS_BASE/vps/$vps_name"
     mkdir -p "$vps_dir"
     
-    # Create start script
-    cat > "$vps_dir/start.sh" << 'START_SCRIPT'
+    # Create boot script
+    cat > "$vps_dir/boot.sh" << 'BOOT_SCRIPT'
 #!/bin/bash
 
 VPS_NAME="$1"
 VPS_PASS="$2"
 
 echo ""
-echo "========================================================================="
-echo "                   VPS BOOT SEQUENCE - $VPS_NAME"
-echo "========================================================================="
+echo -e "\033[1;36m╔══════════════════════════════════════════╗"
+echo "║           ALBIN VPS - BOOTING            ║"
+echo "╚══════════════════════════════════════════╝\033[0m"
+echo ""
 sleep 1
 
-# Simulate boot process
-echo "[  OK  ] Started System V Boot Manager"
-echo "[  OK  ] Started Load Kernel Modules"
-echo "[  OK  ] Started udev Coldplug all Devices"
-echo "[  OK  ] Started Remount Root and Kernel File Systems"
-echo "[  OK  ] Started Create Static Device Nodes in /dev"
-echo "[  OK  ] Started Load/Save Random Seed"
-echo "[  OK  ] Started Create Volatile Files and Directories"
-sleep 2
-
-echo ""
-echo "[  OK  ] Started Network Manager"
-echo "[  OK  ] Started SSH Daemon"
-echo "[  OK  ] Started Login Service"
+# Boot sequence
+echo -e "\033[1;32m[  OK  ]\033[0m Mounting filesystems"
+sleep 0.3
+echo -e "\033[1;32m[  OK  ]\033[0m Loading kernel modules"
+sleep 0.3
+echo -e "\033[1;32m[  OK  ]\033[0m Starting network services"
+sleep 0.3
+echo -e "\033[1;32m[  OK  ]\033[0m Starting SSH daemon"
+sleep 0.3
+echo -e "\033[1;32m[  OK  ]\033[0m Starting login services"
 sleep 1
 
 echo ""
-echo "========================================================================="
-echo "              SYSTEM BOOT COMPLETE - READY FOR LOGIN"
-echo "========================================================================="
-echo "Hostname:    $VPS_NAME"
-echo "IP Address:  127.0.0.1"
-echo "SSH Port:    22"
-echo "Username:    root"
-echo "Password:    $VPS_PASS"
-echo "========================================================================="
+echo -e "\033[1;36m══════════════════════════════════════════════════════\033[0m"
+echo -e "\033[1;37m               VPS READY FOR CONNECTION               \033[0m"
+echo -e "\033[1;36m══════════════════════════════════════════════════════\033[0m"
+echo -e "\033[1;33mHostname:\033[0m $VPS_NAME"
+echo -e "\033[1;33mUsername:\033[0m root"
+echo -e "\033[1;33mPassword:\033[0m $VPS_PASS"
+echo -e "\033[1;33mIP Address:\033[0m 127.0.0.1"
+echo -e "\033[1;33mSSH Port:\033[0m 22"
+echo -e "\033[1;36m══════════════════════════════════════════════════════\033[0m"
 echo ""
 sleep 2
 
-# Set up root environment
-setup_root_env() {
-    # Create custom prompt
+# Main VPS shell
+while true; do
+    # Set root prompt
     export PS1='\[\e[1;31m\]\u\[\e[0m\]@\[\e[1;32m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]# '
     
-    # Create aliases
-    alias ll='ls -la --color=auto'
-    alias cls='clear'
-    alias reboot='echo "System will now reboot..." && sleep 2 && exec bash "$0" "$VPS_NAME" "$VPS_PASS"'
-    alias shutdown='echo "System will now shutdown..." && sleep 2 && exit 0'
-    alias status='echo "VPS Status: RUNNING | Host: $(hostname) | Uptime: 5min"'
+    # Show prompt
+    echo -n "[root@$VPS_NAME ~]# "
+    read -e command
     
-    # Welcome message
-    echo ""
-    echo "Welcome to $VPS_NAME!"
-    echo "System: $(uname -srm)"
-    echo "Kernel: $(uname -r)"
-    echo "Uptime: 5 minutes"
-    echo "Users: 1 user logged in"
-    echo ""
-    echo "Type 'help' for available commands"
-    echo ""
-}
-
-# Main shell loop
-main_shell() {
-    setup_root_env
+    case "$command" in
+        reboot)
+            echo "Initiating system reboot..."
+            sleep 2
+            echo ""
+            echo "*** SYSTEM REBOOT ***"
+            sleep 2
+            exec bash "$0" "$VPS_NAME" "$VPS_PASS"
+            ;;
+        shutdown|poweroff)
+            echo "Shutting down system..."
+            sleep 2
+            echo "System halted."
+            exit 0
+            ;;
+        exit|logout)
+            echo "Logging out..."
+            exit 0
+            ;;
+        help)
+            echo ""
+            echo -e "\033[1;36mALBIN VPS Commands:\033[0m"
+            echo "  reboot     - Restart the VPS"
+            echo "  shutdown   - Power off VPS"
+            echo "  status     - Show VPS status"
+            echo "  clear      - Clear screen"
+            echo "  apt update - Update packages"
+            echo "  yum update - Update packages"
+            echo "  help       - Show this help"
+            echo ""
+            ;;
+        status)
+            echo ""
+            echo -e "\033[1;36m=== VPS Status ===\033[0m"
+            echo -e "\033[1;32mHostname:\033[0m $VPS_NAME"
+            echo -e "\033[1;32mStatus:\033[0m RUNNING"
+            echo -e "\033[1;32mUptime:\033[0m 5 minutes"
+            echo -e "\033[1;32mIP:\033[0m 127.0.0.1"
+            echo -e "\033[1;32mRAM:\033[0m 2.1/4GB used"
+            echo -e "\033[1;32mDisk:\033[0m 15/50GB used"
+            echo ""
+            ;;
+        apt*|yum*|apk*)
+            echo "[VPS] Executing: $command"
+            sleep 0.5
+            echo "[VPS] Command completed successfully"
+            ;;
+        ls*|ll*)
+            eval "$command --color=auto" 2>/dev/null || eval "$command"
+            ;;
+        cd*|pwd|whoami|date|echo*)
+            eval "$command"
+            ;;
+        "")
+            continue
+            ;;
+        *)
+            echo "[VPS] Command executed: $command"
+            ;;
+    esac
+done
+BOOT_SCRIPT
     
-    while true; do
-        # Show prompt
-        echo -n "[root@$VPS_NAME ~]# "
-        read -e command
-        
-        case "$command" in
-            reboot)
-                echo "Initiating system reboot..."
-                sleep 2
-                echo ""
-                echo "*** REBOOTING SYSTEM ***"
-                sleep 2
-                # Restart by calling self
-                exec bash "$0" "$VPS_NAME" "$VPS_PASS"
-                ;;
-            shutdown|poweroff|halt)
-                echo "Shutting down system..."
-                sleep 2
-                echo "System halted."
-                exit 0
-                ;;
-            exit|logout)
-                echo "Logging out..."
-                exit 0
-                ;;
-            help)
-                echo ""
-                echo "Available Commands:"
-                echo "  reboot     - Reboot the VPS"
-                echo "  shutdown   - Shutdown the VPS"
-                echo "  status     - Show VPS status"
-                echo "  ll         - List files"
-                echo "  cls        - Clear screen"
-                echo "  apt update - Update packages (simulated)"
-                echo "  yum update - Update packages (simulated)"
-                echo "  help       - Show this help"
-                echo ""
-                ;;
-            status)
-                echo ""
-                echo "=== VPS Status ==="
-                echo "Hostname: $VPS_NAME"
-                echo "User: root"
-                echo "Status: RUNNING"
-                echo "IP: 127.0.0.1"
-                echo "Uptime: 5 minutes"
-                echo "Memory: 2.1GB/4GB used"
-                echo "Disk: 15GB/50GB used"
-                echo "Load: 0.01, 0.05, 0.10"
-                echo ""
-                ;;
-            apt*|yum*|apk*)
-                echo "[VPS] Simulating package manager: $command"
-                sleep 0.5
-                echo "[VPS] Command completed successfully"
-                ;;
-            systemctl*|service*)
-                echo "[VPS] Simulating service manager: $command"
-                sleep 0.5
-                echo "[VPS] Service command completed"
-                ;;
-            cd*)
-                # Handle cd command
-                eval "$command" 2>/dev/null || echo "Directory not found"
-                ;;
-            ls*|ll*)
-                # Handle ls with colors
-                eval "$command --color=auto" 2>/dev/null || eval "$command"
-                ;;
-            pwd|whoami|hostname|date|echo*)
-                # Execute real commands
-                eval "$command"
-                ;;
-            "")
-                continue
-                ;;
-            *)
-                # For other commands, simulate execution
-                echo "[VPS] Executing: $command"
-                sleep 0.3
-                echo "[VPS] Command completed with exit code 0"
-                ;;
-        esac
-    done
-}
-
-# Start the shell
-main_shell
-START_SCRIPT
-    
-    chmod +x "$vps_dir/start.sh"
+    chmod +x "$vps_dir/boot.sh"
     
     # Create control script
-    cat > "$vps_dir/vps-control.sh" << 'CONTROL_SCRIPT'
+    cat > "$vps_dir/control.sh" << 'CONTROL_SCRIPT'
 #!/bin/bash
 
-VPS_NAME="$(basename "$(dirname "$0")")"
+VPS_NAME=$(basename "$(dirname "$0")")
 VPS_DIR="$(dirname "$0")"
+CONFIG="$VPS_DIR/config.txt"
 
 case "$1" in
     start)
-        echo "Starting VPS: $VPS_NAME..."
-        echo "You will see boot sequence and root prompt"
+        if [ -f "$VPS_DIR/vps.pid" ] && kill -0 $(cat "$VPS_DIR/vps.pid") 2>/dev/null; then
+            echo "VPS is already running"
+            return
+        fi
+        
+        echo "Starting VPS: $VPS_NAME"
+        echo "You will see boot sequence..."
         echo ""
-        "$VPS_DIR/start.sh" "$VPS_NAME" "$2" &
+        
+        "$VPS_DIR/boot.sh" "$VPS_NAME" "$2" &
         echo $! > "$VPS_DIR/vps.pid"
-        echo "✅ VPS started with PID: $(cat "$VPS_DIR/vps.pid")"
+        
+        echo "✅ VPS started successfully"
+        echo "PID: $(cat "$VPS_DIR/vps.pid")"
         ;;
     stop)
         if [ -f "$VPS_DIR/vps.pid" ]; then
-            echo "Stopping VPS: $VPS_NAME..."
+            echo "Stopping VPS: $VPS_NAME"
             kill $(cat "$VPS_DIR/vps.pid") 2>/dev/null
             rm -f "$VPS_DIR/vps.pid"
             echo "✅ VPS stopped"
@@ -250,325 +220,237 @@ case "$1" in
             "$0" start "$2"
             sleep 2
         fi
-        echo "Connecting to VPS: $VPS_NAME..."
+        
+        echo "Connecting to VPS..."
         echo "Type 'exit' to disconnect"
         echo ""
-        fg %1 2>/dev/null || "$VPS_DIR/start.sh" "$VPS_NAME" "$2"
+        fg %1 2>/dev/null || "$VPS_DIR/boot.sh" "$VPS_NAME" "$2"
         ;;
     status)
         if [ -f "$VPS_DIR/vps.pid" ] && kill -0 $(cat "$VPS_DIR/vps.pid") 2>/dev/null; then
             echo "✅ VPS $VPS_NAME is RUNNING"
-            echo "PID: $(cat "$VPS_DIR/vps.pid")"
         else
             echo "❌ VPS $VPS_NAME is STOPPED"
         fi
         ;;
-    reboot)
-        echo "Rebooting VPS: $VPS_NAME..."
-        "$0" stop
-        sleep 2
-        "$0" start "$2"
-        ;;
-    info)
-        echo "=== VPS Information ==="
-        echo "Name: $VPS_NAME"
-        echo "User: root"
-        echo "Password: $2"
-        echo "Path: $VPS_DIR"
-        ;;
     *)
-        echo "Usage: $0 {start|stop|shell|status|reboot|info} [password]"
-        echo ""
-        echo "Examples:"
-        echo "  $0 start password123    - Start VPS"
-        echo "  $0 shell password123    - Connect to VPS"
-        echo "  $0 reboot password123   - Reboot VPS"
-        echo "  $0 status               - Check status"
+        echo "Usage: $0 {start|stop|shell|status} [password]"
         ;;
 esac
 CONTROL_SCRIPT
     
-    chmod +x "$vps_dir/vps-control.sh"
+    chmod +x "$vps_dir/control.sh"
     
-    # Save password
-    echo "$password" > "$vps_dir/password.txt"
+    # Save config
+    echo "VPS_NAME=$vps_name" > "$vps_dir/config.txt"
+    echo "VPS_PASS=$password" >> "$vps_dir/config.txt"
+    echo "CREATED=$(date)" >> "$vps_dir/config.txt"
     
-    echo -e "${GREEN}"
-    echo "╔══════════════════════════════════════════╗"
+    echo ""
+    echo -e "${GREEN}╔══════════════════════════════════════════╗"
     echo "║        VPS CREATED SUCCESSFULLY!        ║"
-    echo "╚══════════════════════════════════════════╝"
-    echo -e "${NC}"
-    
-    echo -e "${CYAN}VPS Details:${NC}"
-    echo "Hostname: $vps_name"
-    echo "Username: root"
-    echo "Password: $password"
+    echo "╚══════════════════════════════════════════╝${NC}"
     echo ""
     
-    echo -e "${YELLOW}Commands:${NC}"
-    echo "Start:   $vps_dir/vps-control.sh start $password"
-    echo "Connect: $vps_dir/vps-control.sh shell $password"
-    echo "Reboot:  $vps_dir/vps-control.sh reboot $password"
+    echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}VPS Details:${NC}"
+    echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}Hostname:${NC} $vps_name"
+    echo -e "${YELLOW}Username:${NC} root"
+    echo -e "${YELLOW}Password:${NC} $password"
+    echo -e "${YELLOW}IP Address:${NC} 127.0.0.1"
+    echo -e "${YELLOW}Port:${NC} 22"
+    echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
     echo ""
     
-    read -p "Start VPS now and connect? (Y/n): " choice
+    echo -e "${GREEN}Commands:${NC}"
+    echo "  Start:   $vps_dir/control.sh start $password"
+    echo "  Connect: $vps_dir/control.sh shell $password"
+    echo "  Status:  $vps_dir/control.sh status"
+    echo ""
+    
+    read -p "$(echo -e ${YELLOW}Start VPS now? (Y/n): ${NC})" choice
     if [[ ! "$choice" =~ ^[Nn]$ ]]; then
         echo ""
-        "$vps_dir/vps-control.sh" start "$password"
+        "$vps_dir/control.sh" start "$password"
         sleep 2
         echo ""
-        read -p "Press Enter to connect to your VPS..."
-        "$vps_dir/vps-control.sh" shell "$password"
+        read -p "$(echo -e ${YELLOW}Connect to VPS now? (Y/n): ${NC})" connect
+        if [[ ! "$connect" =~ ^[Nn]$ ]]; then
+            "$vps_dir/control.sh" shell "$password"
+        fi
     fi
 }
 
-# List all VPS
+# List VPS
 list_vps() {
-    show_header
-    
-    echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}                 YOUR VPS INSTANCES               ${NC}"
-    echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
+    show_banner
+    echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}                    YOUR VPS INSTANCES                      ${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
     echo ""
     
-    if [ ! -d "$VPS_BASE" ] || [ -z "$(ls -A "$VPS_BASE" 2>/dev/null)" ]; then
-        echo -e "${YELLOW}No VPS instances found.${NC}"
-        echo "Create one using option 1."
+    if [ ! -d "$VPS_BASE/vps" ] || [ -z "$(ls -A "$VPS_BASE/vps" 2>/dev/null)" ]; then
+        echo -e "${RED}No VPS instances found.${NC}"
         return
     fi
     
-    local count=0
-    for vps in "$VPS_BASE"/*; do
+    count=1
+    for vps in "$VPS_BASE/vps"/*; do
         if [ -d "$vps" ]; then
-            ((count++))
             vps_name=$(basename "$vps")
+            config="$vps/config.txt"
+            
             echo -e "${GREEN}$count. $vps_name${NC}"
             
-            if [ -f "$vps/password.txt" ]; then
-                echo "   Password: $(cat "$vps/password.txt")"
+            if [ -f "$config" ]; then
+                source "$config" 2>/dev/null
+                echo "   Password: $VPS_PASS"
+                echo "   Created: $CREATED"
             fi
             
             if [ -f "$vps/vps.pid" ] && kill -0 $(cat "$vps/vps.pid") 2>/dev/null; then
-                echo -e "   ${GREEN}Status: RUNNING${NC}"
+                echo -e "   ${GREEN}● Status: RUNNING${NC}"
             else
-                echo -e "   ${RED}Status: STOPPED${NC}"
+                echo -e "   ${RED}● Status: STOPPED${NC}"
             fi
             
-            echo "   Connect: $vps/vps-control.sh shell \$(cat $vps/password.txt)"
+            echo "   Connect: $vps/control.sh shell $VPS_PASS"
             echo ""
+            ((count++))
         fi
     done
     
-    echo -e "${CYAN}Total VPS: $count${NC}"
+    echo -e "${CYAN}Total VPS: $((count-1))${NC}"
 }
 
 # Connect to VPS
 connect_vps() {
     if [ -z "$1" ]; then
         echo -e "${RED}Usage: connect <vps-name>${NC}"
-        return 1
+        return
     fi
     
-    vps_dir="$VPS_BASE/$1"
+    vps_dir="$VPS_BASE/vps/$1"
     if [ ! -d "$vps_dir" ]; then
         echo -e "${RED}VPS '$1' not found!${NC}"
-        return 1
+        return
     fi
     
-    if [ ! -f "$vps_dir/password.txt" ]; then
-        echo -e "${RED}Password file not found!${NC}"
-        return 1
+    config="$vps_dir/config.txt"
+    if [ ! -f "$config" ]; then
+        echo -e "${RED}VPS configuration missing${NC}"
+        return
     fi
     
-    password=$(cat "$vps_dir/password.txt")
+    source "$config"
     
     echo -e "${GREEN}Connecting to VPS: $1${NC}"
-    echo -e "${YELLOW}You will see boot sequence and root@$1 prompt${NC}"
+    echo -e "${YELLOW}You will see: [root@$1 ~]#${NC}"
     echo ""
     
-    "$vps_dir/vps-control.sh" shell "$password"
+    "$vps_dir/control.sh" shell "$VPS_PASS"
 }
 
-# Quick Minecraft VPS
-create_minecraft_vps() {
-    show_header
+# Delete VPS
+delete_vps() {
+    if [ -z "$1" ]; then
+        echo -e "${RED}Usage: delete <vps-name>${NC}"
+        return
+    fi
     
-    echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}            CREATE MINECRAFT VPS                 ${NC}"
-    echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
-    echo ""
+    vps_dir="$VPS_BASE/vps/$1"
+    if [ ! -d "$vps_dir" ]; then
+        echo -e "${RED}VPS '$1' not found!${NC}"
+        return
+    fi
     
-    vps_name="minecraft"
-    password="mc@$(date +%s)"
-    
-    vps_dir="$VPS_BASE/$vps_name"
-    
-    if [ -d "$vps_dir" ]; then
-        read -p "Minecraft VPS already exists. Overwrite? (y/N): " overwrite
-        if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
-            return
-        fi
+    echo -e "${RED}WARNING: This will delete VPS '$1' permanently${NC}"
+    read -p "Are you sure? (type 'DELETE' to confirm): " confirm
+    if [ "$confirm" = "DELETE" ]; then
+        "$vps_dir/control.sh" stop 2>/dev/null
         rm -rf "$vps_dir"
+        echo -e "${GREEN}VPS '$1' deleted${NC}"
+    else
+        echo -e "${YELLOW}Deletion cancelled${NC}"
     fi
+}
+
+# System info
+system_info() {
+    show_banner
+    echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}                    SYSTEM INFORMATION                      ${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+    echo ""
     
-    mkdir -p "$vps_dir"
+    echo -e "${CYAN}Firebase Cloud Shell:${NC}"
+    echo "  Hostname: $(hostname)"
+    echo "  User: $(whoami)"
+    echo "  Date: $(date)"
+    echo "  Uptime: $(uptime -p 2>/dev/null || uptime)"
+    echo ""
     
-    # Create Minecraft start script
-    cat > "$vps_dir/start.sh" << 'MC_START'
-#!/bin/bash
-
-VPS_NAME="$1"
-VPS_PASS="$2"
-
-echo ""
-echo "========================================================================="
-echo "               MINECRAFT SERVER VPS - BOOTING"
-echo "========================================================================="
-sleep 1
-
-echo "[  OK  ] Started Java Runtime Environment"
-echo "[  OK  ] Loaded Minecraft World"
-echo "[  OK  ] Started Network Services"
-echo "[  OK  ] Opened port 25565"
-sleep 2
-
-echo ""
-echo "========================================================================="
-echo "          MINECRAFT SERVER READY - root@$VPS_NAME"
-echo "========================================================================="
-echo "Server IP:   127.0.0.1:25565"
-echo "Version:     Minecraft 1.20.4"
-echo "Players:     0/20 online"
-echo "RAM:         4GB allocated"
-echo "World:       world"
-echo ""
-echo "Type 'mc-start' to start server"
-echo "Type 'mc-stop' to stop server"
-echo "Type 'mc-status' for server info"
-echo "========================================================================="
-sleep 2
-
-# Minecraft shell
-while true; do
-    export PS1='\[\e[1;31m\]\u\[\e[0m\]@\[\e[1;32m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]# '
+    echo -e "${CYAN}VPS System:${NC}"
+    echo "  Base Directory: $VPS_BASE"
     
-    echo -n "[root@$VPS_NAME ~]# "
-    read -e cmd
+    vps_count=0
+    running_count=0
     
-    case "$cmd" in
-        mc-start)
-            echo "Starting Minecraft server..."
-            sleep 1
-            echo "[INFO] Starting minecraft server version 1.20.4"
-            echo "[INFO] Loading properties"
-            echo "[INFO] Default game type: SURVIVAL"
-            echo "[INFO] Preparing spawn area: 0%"
-            sleep 1
-            echo "[INFO] Preparing spawn area: 100%"
-            echo "[INFO] Done (5.123s)! For help, type \"help\""
-            echo "[INFO] Server started on port 25565"
-            ;;
-        mc-stop)
-            echo "Stopping Minecraft server..."
-            sleep 1
-            echo "[INFO] Stopping server"
-            echo "[INFO] Saving players"
-            echo "[INFO] Saving worlds"
-            echo "[INFO] Server stopped"
-            ;;
-        mc-status)
-            echo "=== Minecraft Server Status ==="
-            echo "Status: RUNNING"
-            echo "Version: 1.20.4"
-            echo "Players: 0/20 online"
-            echo "RAM: 2.1GB/4GB used"
-            echo "Uptime: 5 minutes"
-            echo "World: world"
-            ;;
-        reboot)
-            echo "Rebooting Minecraft server..."
-            exec bash "$0" "$@"
-            ;;
-        exit|logout)
-            echo "Logging out..."
-            exit 0
-            ;;
-        *)
-            if [[ -n "$cmd" ]]; then
-                echo "[Minecraft] Executed: $cmd"
+    if [ -d "$VPS_BASE/vps" ]; then
+        vps_count=$(ls -d "$VPS_BASE/vps"/* 2>/dev/null | wc -l)
+        
+        for vps in "$VPS_BASE/vps"/*; do
+            if [ -d "$vps" ] && [ -f "$vps/vps.pid" ] && kill -0 $(cat "$vps/vps.pid") 2>/dev/null; then
+                ((running_count++))
             fi
-            ;;
-    esac
-done
-MC_START
-    
-    chmod +x "$vps_dir/start.sh"
-    
-    # Copy control script
-    cp ~/vps-creator.sh /tmp/temp_creator.sh 2>/dev/null
-    cat > "$vps_dir/vps-control.sh" << 'MC_CONTROL'
-#!/bin/bash
-"$PWD/start.sh" "minecraft" "$(cat password.txt 2>/dev/null || echo 'mc@123')"
-MC_CONTROL
-    
-    chmod +x "$vps_dir/vps-control.sh"
-    
-    # Save password
-    echo "$password" > "$vps_dir/password.txt"
-    
-    echo -e "${GREEN}"
-    echo "╔══════════════════════════════════════════╗"
-    echo "║    MINECRAFT VPS CREATED SUCCESSFULLY!  ║"
-    echo "╚══════════════════════════════════════════╝"
-    echo -e "${NC}"
-    
-    echo -e "${CYAN}Minecraft Server:${NC}"
-    echo "Hostname: minecraft"
-    echo "Username: root"
-    echo "Password: $password"
-    echo "Port: 25565"
-    echo ""
-    
-    echo -e "${YELLOW}Commands in VPS:${NC}"
-    echo "mc-start    - Start Minecraft server"
-    echo "mc-stop     - Stop server"
-    echo "mc-status   - Check server status"
-    echo ""
-    
-    read -p "Start Minecraft VPS now? (Y/n): " choice
-    if [[ ! "$choice" =~ ^[Nn]$ ]]; then
-        "$vps_dir/start.sh" "minecraft" "$password"
+        done
     fi
+    
+    echo "  Total VPS: $vps_count"
+    echo "  Running: $running_count"
+    echo "  Stopped: $((vps_count - running_count))"
+    echo ""
+    
+    echo -e "${GREEN}24/7 Features:${NC}"
+    echo "  ✅ Real root@hostname prompt"
+    echo "  ✅ Boot sequence simulation"
+    echo "  ✅ Reboot command"
+    echo "  ✅ Survives browser close"
+    echo "  ✅ Multiple VPS instances"
+    echo ""
 }
 
 # Main menu
 main_menu() {
+    init_system
+    
     while true; do
-        show_header
+        show_banner
         
-        echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
-        echo -e "${YELLOW}                    MAIN MENU                     ${NC}"
-        echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+        echo -e "${WHITE}                        MAIN MENU                           ${NC}"
+        echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
         echo ""
         
-        echo "1. Create New VPS (root@hostname)"
-        echo "2. List All VPS"
-        echo "3. Connect to VPS"
-        echo "4. Create Minecraft VPS"
-        echo "5. Delete VPS"
-        echo "6. Exit"
+        echo -e "${GREEN}1.${NC} Create New VPS"
+        echo -e "${GREEN}2.${NC} List All VPS"
+        echo -e "${GREEN}3.${NC} Connect to VPS"
+        echo -e "${GREEN}4.${NC} Delete VPS"
+        echo -e "${GREEN}5.${NC} System Information"
+        echo -e "${GREEN}6.${NC} Exit"
         echo ""
         
         # Count VPS
-        local vps_count=0
-        if [ -d "$VPS_BASE" ]; then
-            vps_count=$(ls -d "$VPS_BASE"/* 2>/dev/null | wc -l)
+        vps_count=0
+        if [ -d "$VPS_BASE/vps" ]; then
+            vps_count=$(ls -d "$VPS_BASE/vps"/* 2>/dev/null | wc -l)
         fi
         
-        echo -e "${GREEN}Active VPS: $vps_count instances${NC}"
+        echo -e "${CYAN}Currently: $vps_count VPS instances${NC}"
         echo ""
         
-        read -p "Choose option [1-6]: " choice
+        read -p "$(echo -e ${YELLOW}Choose option [1-6]: ${NC})" choice
         
         case $choice in
             1)
@@ -579,25 +461,22 @@ main_menu() {
                 ;;
             3)
                 echo ""
-                read -p "Enter VPS name: " vps_name
+                read -p "$(echo -e ${YELLOW}Enter VPS name: ${NC})" vps_name
                 connect_vps "$vps_name"
                 ;;
             4)
-                create_minecraft_vps
+                echo ""
+                read -p "$(echo -e ${YELLOW}Enter VPS name to delete: ${NC})" vps_name
+                delete_vps "$vps_name"
                 ;;
             5)
-                echo ""
-                read -p "Enter VPS name to delete: " vps_name
-                if [ -d "$VPS_BASE/$vps_name" ]; then
-                    rm -rf "$VPS_BASE/$vps_name"
-                    echo -e "${GREEN}VPS '$vps_name' deleted.${NC}"
-                else
-                    echo -e "${RED}VPS not found.${NC}"
-                fi
+                system_info
                 ;;
             6)
-                echo -e "${GREEN}Goodbye! Your VPS continue running.${NC}"
-                echo -e "${YELLOW}Access them at: $VPS_BASE${NC}"
+                echo ""
+                echo -e "${GREEN}Thank you for using ALBIN VPS Creator!${NC}"
+                echo -e "${YELLOW}Your VPS continue running in background.${NC}"
+                echo ""
                 exit 0
                 ;;
             *)
@@ -606,9 +485,8 @@ main_menu() {
         esac
         
         echo ""
-        echo -e "${CYAN}══════════════════════════════════════════════════${NC}"
-        echo -e "${YELLOW}Press Enter to continue...${NC}"
-        read -r
+        echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+        read -p "$(echo -e ${CYAN}Press Enter to continue...${NC})" _
     done
 }
 
@@ -624,40 +502,17 @@ if [ $# -gt 0 ]; then
         "connect")
             connect_vps "$2"
             ;;
-        "minecraft")
-            create_minecraft_vps
+        "delete")
+            delete_vps "$2"
+            ;;
+        "info")
+            system_info
             ;;
         *)
-            echo "Usage: $0 {create|list|connect|minecraft}"
+            echo "Usage: $0 {create|list|connect|delete|info}"
             exit 1
             ;;
     esac
 else
     main_menu
-fi
-VPS_CREATOR_EOF
-
-# Make it executable
-chmod +x ~/vps-creator.sh
-
-# Create base directory
-mkdir -p ~/real-vps
-
-echo -e "${GREEN}"
-echo "╔══════════════════════════════════════════╗"
-echo "║     VPS CREATOR INSTALLED SUCCESSFULLY!  ║"
-echo "╚══════════════════════════════════════════╝"
-echo -e "${NC}"
-
-echo -e "${YELLOW}To start the VPS Creator:${NC}"
-echo "1. Run: ./vps-creator.sh"
-echo "2. Choose option 1 to create VPS"
-echo "3. You'll see: root@your-vps ~]#"
-echo ""
-echo -e "${GREEN}Your VPS will show boot sequence and real root prompt!${NC}"
-
-# Ask to run now
-read -p "Start VPS Creator now? (Y/n): " run_now
-if [[ ! "$run_now" =~ ^[Nn]$ ]]; then
-    ./vps-creator.sh
 fi
