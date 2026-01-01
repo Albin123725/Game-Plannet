@@ -24,11 +24,16 @@ USERNAME="ubuntu"
 PASSWORD="ubuntu"
 SWAP_SIZE=4G
 
-# Firebase Environment Detection
+# Firebase Environment Detection (safe check)
 IS_FIREBASE=0
-if [ -n "$GOOGLE_CLOUD_PROJECT" ] || [ -n "$FIREBASE_ENVIRONMENT" ] || hostname | grep -q "codespaces\|gitpod\|firebase"; then
+if [ -n "${GOOGLE_CLOUD_PROJECT:-}" ] || 
+   [ -n "${FIREBASE_ENVIRONMENT:-}" ] || 
+   hostname 2>/dev/null | grep -q "codespaces\|gitpod\|firebase" ||
+   [ -f "/.firebaseconfig" ] || 
+   [ -d "/home/firebase" ] ||
+   whoami | grep -q "firebase"; then
     IS_FIREBASE=1
-    echo "[INFO] Firebase environment detected"
+    echo "[INFO] Firebase/Cloud environment detected"
 fi
 
 # ALBIN Banner Display
@@ -110,6 +115,9 @@ firebase_service() {
             else
                 echo "[INFO] No log file found"
             fi
+            ;;
+        *)
+            echo "Usage: $0 --service [start|stop|status|logs]"
             ;;
     esac
 }
@@ -289,6 +297,7 @@ customize_settings() {
 
 # Save configuration
 save_config() {
+    mkdir -p "$VM_DIR"
     cat > "$VM_DIR/vm.config" <<EOF
 HOSTNAME="$HOSTNAME"
 USERNAME="$USERNAME"
@@ -304,14 +313,28 @@ EOF
 # Load saved config
 load_config() {
     if [ -f "$VM_DIR/vm.config" ]; then
-        source "$VM_DIR/vm.config"
-        echo "[INFO] Loaded saved configuration from $VM_DIR/vm.config"
+        # Use safe source to avoid issues
+        if [ -r "$VM_DIR/vm.config" ]; then
+            while IFS='=' read -r key value; do
+                # Skip comments and empty lines
+                [[ $key =~ ^[[:space:]]*# ]] && continue
+                [[ -z $key ]] && continue
+                
+                # Remove quotes from value
+                value="${value%\"}"
+                value="${value#\"}"
+                
+                # Export variable
+                export "$key"="$value"
+            done < "$VM_DIR/vm.config"
+            echo "[INFO] Loaded saved configuration from $VM_DIR/vm.config"
+        fi
     fi
 }
 
 # Parse command line arguments
 parse_args() {
-    case "$1" in
+    case "${1:-}" in
         --menu|-m)
             show_menu
             ;;
@@ -319,7 +342,7 @@ parse_args() {
             BACKGROUND_MODE=1
             ;;
         --service|-s)
-            if [ -n "$2" ]; then
+            if [ -n "${2:-}" ]; then
                 firebase_service "$2"
                 exit 0
             else
@@ -342,6 +365,9 @@ parse_args() {
         --help|-h)
             show_help
             exit 0
+            ;;
+        "")
+            # No arguments, continue normally
             ;;
         *)
             echo "Unknown option: $1"
