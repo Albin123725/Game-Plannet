@@ -1,30 +1,25 @@
-# 🔥 Ultimate VPS Creator for Firebase Cloud Shell
+# 🔥 Firebase QEMU VPS - Free Lifetime Virtual Machines
 
-Turn Firebase Cloud Shell into a **REAL VPS farm** with full root access, 24/7 operation, and multiple Linux distributions!
+![Banner](https://img.shields.io/badge/Firebase-Free%20VPS-green)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Version](https://img.shields.io/badge/Version-2.0-purple)
+
+## 🎯 What is this?
+Create **REAL virtual machines** with QEMU virtualization in **Google Firebase Cloud Shell** - **100% FREE FOREVER**!
 
 ## ✨ Features
-
-### ✅ **Real VPS Environment**
-- **Root Access**: Real `root@hostname` terminal
-- **Working Package Managers**: apt, yum, apk
-- **Multiple OS**: Ubuntu 20/22, Debian 10/11, Alpine, CentOS
-- **Custom Resources**: Choose RAM, CPU, Disk
-
-### ✅ **24/7 Operation**
-- **Survives Browser Close**: VPS run continuously
-- **Auto-restart**: On Firebase Shell resume
-- **Persistent Storage**: VPS saved across sessions
-- **Background Processes**: Run even when tab closed
-
-### ✅ **Easy Management**
-- **Web Terminal**: Optional web-based access
-- **Backup System**: Automatic VPS backups
-- **Resource Monitoring**: Track usage
-- **One-Command Control**: Simple management
+✅ **Real QEMU Virtualization** - Not a simulation  
+✅ **24/7 Background Operation** - Survives browser close  
+✅ **Multiple OS Support** - Ubuntu, Debian, Alpine  
+✅ **Full Customization** - RAM, CPU, Disk, Credentials  
+✅ **ALBIN Interface** - Beautiful menu system  
+✅ **Persistent Storage** - VPS saved across sessions  
+✅ **SSH Access** - Root/User access like real VPS  
+✅ **Free Forever** - No Google Cloud billing needed  
 
 ## 🚀 Quick Start
 
-### **One-Command Installation**
+### **One-Command Installation** (in Firebase Shell):
 ```bash
-# Download and install
-curl -L https://raw.githubusercontent.com/yourusername/firebase-vps/main/vps-creator.sh | bash
+# Copy and paste this in Firebase Cloud Shell:
+bash <(curl -s https://raw.githubusercontent.com/Albin123725/Firebase/main/install.sh)
